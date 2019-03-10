@@ -1,0 +1,36 @@
+callbacks.Register("CreateMove", function(cmd)
+
+    -- define localplayer and bomb entity
+    local local_player = entities.GetLocalPlayer();
+    local bomb = entities.FindByClass("CPlantedC4")[1];
+
+    -- proceed if localplayer exists and bomb is planted
+    if (local_player == nil or bomb == nil) then
+        return
+    end
+    
+    -- make sure we're CT
+    if (local_player:GetTeamNumber() ~= 3) then
+        return
+    end
+    
+    -- further checks to make sure bomb is still ticking
+    if not (bomb:GetProp("m_bBombTicking") and bomb:GetProp("m_bBombDefused") == 0 and globals.CurTime() < bomb:GetProp("m_flC4Blow")) then
+        return
+    end
+    
+    -- if we don't have enough time to defuse, don't do it
+    if bomb:GetProp("m_flDefuseCountDown") > bomb:GetProp("m_flC4Blow") then
+        return
+    end
+    
+    -- calculate distance from localplayer to the bomb
+    local distance = vector.Distance( {bomb:GetAbsOrigin()}, {local_player:GetAbsOrigin()} )
+
+    -- if we're close enough to the bomb
+    if(distance <= 75) then
+        -- defuse
+        cmd:SetButtons(cmd:GetButtons() | (1 << 5))
+    end
+
+end)
